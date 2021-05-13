@@ -10,22 +10,31 @@ def get_dataset(name):
 
     with open(docs_dir, 'r') as f:
         json_docs = load(f)
-        files = get_docs(json_docs)
+        files = get_docs(json_docs, name)
 
     with open(query_dir, 'r') as f:
         json_querys = load(f)
         querys = get_querys(json_querys)
 
-    return files, querys
+    with open(rel_dir, 'r') as f:
+        json_rel = load(f)
+        rel = get_rel(json_rel)
+
+    return files, querys, rel
 
 
-def get_docs(json_docs):
+def get_docs(json_docs, name):
     docs = []
 
     for key in json_docs.keys():
         id = int(json_docs[key]['id'])
         title = json_docs[key].get('title', 'empty')
-        abstract = json_docs[key].get('abstract', 'empty')
+        
+        if name == 'CRAN':
+            abstract = json_docs[key].get('abstract', 'empty')
+        if name == 'CISI':
+            abstract = json_docs[key].get('text', 'empty')
+        
         docs.append(File(id, title, abstract))
 
     return docs
@@ -40,3 +49,12 @@ def get_querys(json_querys):
         querys.append(Query(id, text))
 
     return querys
+
+
+def get_rel(json_rel):
+    rel = dict()
+
+    for key in json_rel.keys():
+        rel[int(key)] = list(map(lambda x: int(x), json_rel[key].keys()))
+
+    return rel

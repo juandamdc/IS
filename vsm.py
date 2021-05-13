@@ -23,10 +23,10 @@ def calculate_docs_tfidf(files):
         for key in files_tf[i]:
             files_tfidf[i+1][key] = files_tf[i][key] * files_idf[key] 
 
-    return files_tfidf
+    return files_tfidf, files_idf
 
 
-def calculate_querys_tfidf(querys, alpha):
+def calculate_querys_tfidf(querys, files_idf, alpha):
     n_i = dict()
     
     # calculate tf
@@ -34,19 +34,12 @@ def calculate_querys_tfidf(querys, alpha):
     for query in querys:
         querys_tf.append(calculate_tf(query, n_i))
 
-    # calculate idf
-    N = len(querys)
-    querys_idf = dict()
-
-    for key in n_i.keys():
-        querys_idf[key] = log(N/n_i[key], 10)
-
     # calculate tfidf
     querys_tfidf = dict()
     for i in range(len(querys)):
         querys_tfidf[i+1] = dict()
         for key in querys_tf[i]:
-            querys_tfidf[i+1][key] = (alpha + (1 - alpha) * querys_tf[i][key]) * querys_idf[key] 
+            querys_tfidf[i+1][key] = (alpha + (1 - alpha) * querys_tf[i][key]) * files_idf.get(key, 0)
 
     return querys_tfidf
 
