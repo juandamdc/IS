@@ -7,7 +7,7 @@ class File:
         self.body = body
 
     def __str__(self):
-        return f'id: {self.id} \ntitle: {self.title} \nbody: {self.body}'
+        return f'id: {self.id} \ntitle: {self.title} \nbody: {self.body[:300]}\n'
 
 class Query:
     def __init__(self, id, body):

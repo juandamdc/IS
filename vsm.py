@@ -27,21 +27,24 @@ def calculate_docs_tfidf(files):
 
 
 def calculate_querys_tfidf(querys, files_idf, alpha):
-    n_i = dict()
-    
-    # calculate tf
-    querys_tf = [] 
-    for query in querys:
-        querys_tf.append(calculate_tf(query, n_i))
-
-    # calculate tfidf
     querys_tfidf = dict()
+    
     for i in range(len(querys)):
-        querys_tfidf[i+1] = dict()
-        for key in querys_tf[i]:
-            querys_tfidf[i+1][key] = (alpha + (1 - alpha) * querys_tf[i][key]) * files_idf.get(key, 0)
+        querys_tfidf[i+1] = calculate_query_tfidf(querys[i], files_idf, alpha)
 
     return querys_tfidf
+
+
+def calculate_query_tfidf(query, files_idf, alpha):
+    # calculate tf
+    query_tf = calculate_tf(query, dict())
+
+    # calculate tfidf    
+    query_tfidf = dict()
+    for key in query_tf:
+            query_tfidf[key] = (alpha + (1 - alpha) * query_tf[key]) * files_idf.get(key, 0)
+
+    return query_tfidf
 
 
 def calculate_tf(text, n_i):
