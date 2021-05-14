@@ -1,6 +1,6 @@
 from get_dataset import get_dataset
 from text_proc import proc_doc, proc_query, proc_doc_noun_verb, proc_query_noun_verb
-from vsm import calculate_docs_tfidf, calculate_querys_tfidf, calculate_query_tfidf, get_ranking, get_query_ranking
+from vsm import calculate_docs_tfidf, calculate_querys_tfidf, calculate_query_tfidf, get_ranking, get_query_ranking, query_feedback
 from evaluation import apply_r_f1, apply_r_recovered, apply_r_precision, apply_fallout
 
 from json import dump, load
@@ -90,19 +90,106 @@ def personal_query(dataset_name, proc_type, files, n):
         with open(files_idf_dir, 'w') as f:
             dump(files_idf, f)
 
-    query = input('Escriba su consulta: ')
+    querys_num = 0
+    querys_text_id = dict()
+    querys_id_relevant = dict()
+    querys_id_irrelevant = dict()
+    
+    print('''    Para escribir una consulta use el comando: query <query text>
+    Para adicionar un documento al conjunto de documentos relevantes para una consulta use el comando: relevant <query_id> <document_id>
+    Para adicionar un documento al conjunto de documentos no relevantes para una consulta use el comando: irrelevant <query_id> <document_id> 
+    Para salir presione Enter''')
+
+    while True:
+        input_str = input('>>: ')
+
+        if input_str == '':
+            break
+
+        input_str = input_str.split(' ', 1)
+        if input_str[0] == 'query':
+            querys_num = input_query(proc_type, input_str[1], querys_num, querys_text_id, querys_id_relevant, querys_id_irrelevant, files, files_tfidf, files_idf, n)
+        elif input_str[0] == 'relevant':
+            input_relevant(input_str[1], querys_id_relevant, querys_num, len(files))
+        elif input_str[0] == 'irrelevant':
+            input_irrelevant(input_str[1], querys_id_irrelevant, querys_num, len(files))
+        else:
+            print('Escriba un comendo valido\n')
+
+
+def input_query(proc_type, query, querys_num, querys_text_id, querys_id_relevant, querys_id_irrelevant, files, files_tfidf, files_idf, n):
+    if querys_text_id.get(query, 0) == 0:
+        querys_num += 1
+        querys_text_id[query] = querys_num
+    
+    query_id = querys_text_id[query]
+    print(f'Query id: {query_id}')
+    print(querys_id_relevant.get(query_id, []))
+    print(querys_id_irrelevant.get(query_id, []))
 
     if proc_type == 0:
         query_text = proc_query(query)
     else:
         query_text = proc_query_noun_verb(query)
 
-    querys_tfidf = calculate_query_tfidf(query_text, files_idf, 0.4)
+    query_tfidf = calculate_query_tfidf(query_text, files_idf, 0.4)
+    query_tfidf = query_feedback(query_tfidf, querys_id_relevant.get(query_id, []), querys_id_irrelevant.get(query_id, []), files_tfidf) 
 
-    ranking = get_query_ranking(files_tfidf, querys_tfidf, n)
-    
+    ranking = get_query_ranking(files_tfidf, query_tfidf, n)
+        
     for file_id in ranking:
         print(files[file_id-1])
+
+    return querys_num
+
+
+def input_relevant(input_str, querys_id_relevant, querys_num, files_num):
+    input_str = input_str.split(' ')
+
+    if len(input_str) > 2:
+        print('Escriba un comendo valido\n')
+        return
+    
+    query_id = int(input_str[0])
+    file_id = int(input_str[1])
+    
+    if query_id <= 0 or query_id > querys_num:
+        print(f'No existe una query con dicho id({query_id})')
+        return
+
+    if file_id <= 0 or file_id > files_num:
+        print(f'No existe un documento con dicho id({file_id})')
+        return
+
+    if querys_id_relevant.get(query_id, []) == []:
+        querys_id_relevant[query_id] = []
+    
+    querys_id_relevant[query_id].append(file_id)
+    
+
+def input_irrelevant(input_str, querys_id_irrelevant, querys_num, files_num):
+    input_str = input_str.split(' ')
+
+    if len(input_str) > 2:
+        print('Escriba un comendo valido\n')
+        return
+
+    query_id = int(input_str[0])
+    file_id = int(input_str[1])
+
+    if query_id <= 0 or query_id > querys_num:
+        print(f'No existe una query con dicho id({query_id})')
+        return
+
+    if file_id <= 0 or file_id > files_num:
+        print(f'No existe un documento con dicho id({file_id})')
+        return
+
+    if querys_id_irrelevant.get(query_id, []) == []:
+        querys_id_irrelevant[query_id] = []
+    
+    querys_id_irrelevant[query_id].append(file_id)
+
 
 
 
