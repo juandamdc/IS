@@ -32,7 +32,7 @@ def proc_query_noun_verb(data):
     data = basic_proc(data)
     data = nltk.word_tokenize(data)
     tagged_data = nltk.pos_tag(data)
-    data = list(map(lambda x: x[0], filter(lambda x: x[1]=='NN' or x[1]=='VB', tagged_data)))
+    data = list(map(lambda x: x[0], filter(lambda x: x[1] in ['NN', 'NNS', 'NNP', 'NNPS', 'VB', 'VBG', 'VBD', 'VBN', 'VBP', 'VBZ'], tagged_data)))
     data = lemmatize(data)
     return data
 
