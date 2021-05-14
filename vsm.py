@@ -96,3 +96,18 @@ def ranking_function(doc, query):
 
 def mod_vector(vector):
     return sqrt(sum(map(lambda x: x**2, vector.values())))
+
+
+def query_feedback(query_tfidf, relevant_docs, irrelevant_docs, files_tfidf):
+    words = set(query_tfidf.keys())
+
+    for doc in relevant_docs:
+        words = words.union(files_tfidf[doc].keys())
+
+    for doc in irrelevant_docs:
+        words = words.union(files_tfidf[doc].keys())
+
+    for word in words:
+        query_tfidf[word] = query_tfidf.get(word, 0) + 0.75 * 1/max(len(relevant_docs), 1) * sum([files_tfidf[doc].get(word, 0) for doc in relevant_docs]) + 0.15 * 1/max(len(irrelevant_docs), 1) * sum([files_tfidf[doc].get(word, 0) for doc in irrelevant_docs])
+
+    return query_tfidf
