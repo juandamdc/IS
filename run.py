@@ -3,6 +3,7 @@ from text_proc import proc_doc, proc_query, proc_doc_noun_verb, proc_query_noun_
 from vsm import calculate_docs_tfidf, calculate_querys_tfidf, calculate_query_tfidf, get_ranking, get_query_ranking, query_feedback
 from evaluation import apply_r_f1, apply_r_recovered, apply_r_precision, apply_fallout
 
+import statistics
 from json import dump, load
 import os
 
@@ -51,13 +52,16 @@ def evaluate_system(dataset_name, proc_type, files, querys, rel, n):
 
     ranking = get_ranking(files_tfidf, querys_tfidf, n)
 
-    querys_eval = apply_r_f1(n, ranking, rel)
-    # querys_eval = apply_r_recovered(n, ranking, rel)
-    # querys_eval = apply_r_precision(n, ranking, rel)
-    # querys_eval = apply_fallout(n, len(files), ranking, rel)
+    querys_eval_r_f1 = apply_r_f1(n, ranking, rel)
+    querys_eval_r_recovered = apply_r_recovered(n, ranking, rel)
+    querys_eval_r_precision = apply_r_precision(n, ranking, rel)
+    querys_eval_fallout = apply_fallout(n, len(files), ranking, rel)
 
-    for key in querys_eval.keys():
-        print(querys_eval[key])
+    print('Evaluacion del sistema')
+    print(f'promedio {n}-Recobrado: ', statistics.mean(querys_eval_r_recovered.values()))
+    print(f'promedio {n}-Precision: ', statistics.mean(querys_eval_r_precision.values()))
+    print(f'promedio {n}-F1: ', statistics.mean(filter(lambda x: x != 'indefinido', querys_eval_r_f1.values())))
+    print(f'promedio {n}-Fallout: ', statistics.mean(querys_eval_fallout.values()))
 
 
 def personal_query(dataset_name, proc_type, files, n):
